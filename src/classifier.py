@@ -113,19 +113,35 @@ def main(args):
 
                 predictions = model.predict_proba(emb_array)
                 top3_class_indices = np.argpartition(predictions, -3, axis=1)[:, -3:]
+                best_class_indices = []
                 top3_class_probabilities = np.zeros(top3_class_indices.shape)
                 for i in range(len(top3_class_indices)):
                     top3_class_indices[i] = top3_class_indices[i][np.argsort(predictions[i][top3_class_indices[i]])]    # Sorts in increasing order
                     top3_class_probabilities[i] = predictions[i, top3_class_indices[i]]
+
+                    unsure = ''
+                    if (top3_class_probabilities[i][2] - top3_class_probabilities[i][1]) < np.std(predictions[i]):
+                        #np.append(top3_class_indices[i], 'unsure')
+                        best_class_indices.append(-1)
+                        unsure = 'UNSURE  '
+                    else:
+                        best_class_indices.append(top3_class_indices[i, 2])
+                    print('%4d  %s%s: %.3f\t%s: %.3f\t%s: %.3f' % (i, unsure,
+                                class_names[top3_class_indices[i, 2]], top3_class_probabilities[i, 2],
+                                class_names[top3_class_indices[i, 1]], top3_class_probabilities[i, 1],
+                                class_names[top3_class_indices[i, 0]], top3_class_probabilities[i, 0]))
                 #best_class_indices = np.argmax(predictions, axis=1)
                 #best_class_probabilities = predictions[np.arange(len(best_class_indices)), best_class_indices]
-                
+                """
                 for i in range(len(top3_class_indices)):
-                    print('%4d  %s: %.3f \t %s: %.3f \t %s: %.3f' % (i, class_names[top3_class_indices[i, 2]], top3_class_probabilities[i, 2],
+                    if len(top3_class_indices[i]) > 3:
+                        print('Unsure\t'),
+
+                    print('%4d  %s: %.3f\t%s: %.3f\t%s: %.3f' % (i, class_names[top3_class_indices[i, 2]], top3_class_probabilities[i, 2],
                                                 class_names[top3_class_indices[i, 1]], top3_class_probabilities[i, 1],
                                                 class_names[top3_class_indices[i, 0]], top3_class_probabilities[i, 0]))
-                    
-                accuracy = np.mean(np.equal(top3_class_indices[:, 2], labels))
+                """
+                accuracy = np.mean(np.equal(best_class_indices, labels))
                 print('Accuracy: %.3f' % accuracy)
                 
             
